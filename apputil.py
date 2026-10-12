@@ -31,13 +31,15 @@ class Genius:
         response = requests.get(
             search_url,
             headers=headers,
-            params={"q": search_term, "per_page": 50},
+            params={"q": search_term},
             timeout=30
         )
 
         response.raise_for_status()
 
-        hits = response.json()["response"]["hits"]
+        # Get the first search result.
+        json_data = response.json()
+        hits = json_data["response"]["hits"]
 
         # Check if any results were found.
         if not hits:
@@ -45,21 +47,8 @@ class Genius:
                 f"No results found for {search_term}"
             )
 
-        # Find an artist whose name matches the search term.
-        artist_id = None
-
-        for hit in hits:
-            artist = hit["result"]["primary_artist"]
-
-            if artist["name"].lower() == search_term.lower():
-                artist_id = artist["id"]
-                break
-
-        # Raise an error if the artist was not found.
-        if artist_id is None:
-            raise ValueError(
-                f"Artist not found: {search_term}"
-            )
+        # Extract the primary artist ID from the first hit.
+        artist_id = hits[0]["result"]["primary_artist"]["id"]
 
         # Get detailed information about the artist.
         artist_url = f"{self.base_url}/artists/{artist_id}"
@@ -72,9 +61,8 @@ class Genius:
 
         response.raise_for_status()
 
-        artist_data = response.json()["response"]["artist"]
-
-        return artist_data
+        # Return the complete JSON response.
+        return response.json()
 
     def get_artists(self, search_terms):
         # Store information for multiple artists.
@@ -82,7 +70,8 @@ class Genius:
 
         for search_term in search_terms:
             # Get information for each artist.
-            artist = self.get_artist(search_term)
+            artist_data = self.get_artist(search_term)
+            artist = artist_data["response"]["artist"]
 
             artists.append({
                 "search_term": search_term,
