@@ -1,14 +1,23 @@
+
+import os
 import requests
 import pandas as pd
+from dotenv import load_dotenv
 
 
 class Genius:
     """A class for getting artist information from the Genius API."""
 
-    def __init__(self, access_token):
+    def __init__(self, access_token=None):
+        # Load the API access token from the .env file.
+        load_dotenv()
+
         # Store the API access token and base URL.
-        self.access_token = access_token
+        self.access_token = access_token or os.getenv("ACCESS_TOKEN")
         self.base_url = "https://api.genius.com"
+
+        if not self.access_token:
+            raise ValueError("ACCESS_TOKEN is missing from the environment.")
 
     def get_artist(self, search_term):
         # Set up the API authorization.
@@ -92,4 +101,3 @@ class Genius:
                 "followers_count"
             ]
         )
-    
